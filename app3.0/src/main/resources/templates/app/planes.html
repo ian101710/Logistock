@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planes | LogiStock</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body>
+
+    <div th:replace="~{layout/fragments :: nav-dashboard}"></div>
+
+    <div class="container my-5">
+
+        <div class="text-center mb-5">
+            <h2 class="fw-bold"><i class="bi bi-gem text-primary"></i> Elige el plan de tu almacén</h2>
+            <p class="text-muted">Solicita el cambio y un administrador lo revisará. Sin permanencia.</p>
+        </div>
+
+        <div th:if="${param.aviso} != null and ${param.aviso[0]} == 'premium-requerido'" class="alert alert-warning text-center shadow-sm">
+            <i class="bi bi-lock-fill"></i> La Alerta de Stock Crítico es una función exclusiva del plan Premium.
+        </div>
+        <div th:if="${param.get('solicitud-enviada')} != null" class="alert alert-success text-center shadow-sm">
+            <i class="bi bi-check-circle-fill"></i> Tu solicitud fue enviada. Un administrador la revisará en breve.
+        </div>
+        <div th:if="${param.error} != null" class="alert alert-danger text-center shadow-sm">
+            <i class="bi bi-exclamation-triangle-fill"></i> <span th:text="${param.error[0]}"></span>
+        </div>
+
+        <!-- Estado de una solicitud ya enviada y aún pendiente -->
+        <div th:if="${solicitudPendiente != null}" class="alert alert-info text-center shadow-sm">
+            <i class="bi bi-hourglass-split"></i>
+            Ya tienes una solicitud <strong>pendiente</strong> para pasar a
+            <strong th:text="${solicitudPendiente.planSolicitado}"></strong>.
+            Un administrador debe aprobarla antes de que se aplique.
+        </div>
+
+        <div class="row justify-content-center g-4">
+
+            <div class="col-md-5" th:each="p : ${planesCatalogo}">
+                <div class="plan-card" th:classappend="${p.destacado()} ? 'plan-card--highlight' : ''">
+
+                    <span th:if="${p.destacado()}" class="plan-card__badge">
+                        <i class="bi bi-star-fill"></i> Recomendado
+                    </span>
+
+                    <div class="plan-card__nombre" th:text="${p.nombre()}">Básico</div>
+                    <div class="plan-card__precio">
+                        <span th:text="${p.precio()}">S/ 0</span>
+                        <span th:text="${p.periodo()}">/ mes</span>
+                    </div>
+
+                    <ul class="plan-card__lista">
+                        <li th:each="f : ${p.incluye()}">
+                            <i class="bi bi-check-circle-fill text-success"></i> <span th:text="${f}"></span>
+                        </li>
+                        <li class="no-incluye" th:each="f : ${p.noIncluye()}">
+                            <i class="bi bi-x-circle"></i> <span th:text="${f}"></span>
+                        </li>
+                    </ul>
+
+                    <!-- Ya tienes este plan -->
+                    <button th:if="${p.id().name() == usuarioActual.plan.name()}"
+                            type="button" class="btn btn-outline-secondary w-100 fw-bold" disabled>
+                        Tu plan actual
+                    </button>
+
+                    <!-- Ya hay una solicitud pendiente: no se puede pedir otra -->
+                    <button th:if="${p.id().name() != usuarioActual.plan.name() and solicitudPendiente != null}"
+                            type="button" class="btn btn-outline-secondary w-100 fw-bold" disabled>
+                        Solicitud en revisión
+                    </button>
+
+                    <!-- Solicitar cambio a este plan -->
+                    <form th:if="${p.id().name() != usuarioActual.plan.name() and solicitudPendiente == null}"
+                          th:action="@{/planes/solicitar}" method="post">
+                        <input type="hidden" name="planSolicitado" th:value="${p.id()}" />
+                        <button type="submit" class="btn w-100 fw-bold"
+                                th:classappend="${p.destacado()} ? 'btn-warning text-dark' : 'btn-outline-primary'">
+                            <i class="bi bi-send-fill"></i> Solicitar cambio a <span th:text="${p.nombre()}"></span>
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+        <p class="text-center text-muted small mt-4">
+            <i class="bi bi-info-circle"></i> El cambio de plan debe ser aprobado por un administrador; no se aplica de forma automática.
+        </p>
+    </div>
+
+    <div th:replace="~{layout/fragments :: footer-app}"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/script.js}"></script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Cuentas | LogiStock</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body>
+
+    <div th:replace="~{layout/fragments :: nav-dashboard}"></div>
+
+    <div class="container my-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-shield-lock text-danger"></i> Gestión de Cuentas</h2>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-dark fs-6"><i class="bi bi-people-fill"></i> Total: <span th:text="${#lists.size(usuarios)}">0</span></span>
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevaCuenta">
+                    <i class="bi bi-person-plus-fill"></i> Nueva cuenta
+                </button>
+            </div>
+        </div>
+
+        <div th:if="${param.error} != null and ${param.error[0]} == 'email-duplicado'" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> Ya existe una cuenta registrada con ese correo.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${param.get('cuenta-creada')} != null" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> Cuenta creada correctamente.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="ps-4">ID</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th class="text-center">Plan</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center">Roles</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="u : ${usuarios}">
+                            <td class="ps-4 text-muted fw-bold" th:text="${u.id}"></td>
+                            <td class="fw-bold" th:text="${u.nombreCompleto}"></td>
+                            <td th:text="${u.email}"></td>
+                            <td class="text-center">
+                                <span th:class="${u.plan.name() == 'PREMIUM'} ? 'badge bg-warning text-dark' : 'badge bg-secondary'"
+                                      th:text="${u.plan}"></span>
+                            </td>
+                            <td class="text-center">
+                                <span th:class="${u.activo} ? 'badge bg-success' : 'badge bg-danger'"
+                                      th:text="${u.activo} ? 'Activo' : 'Inactivo'"></span>
+                            </td>
+                            <td class="text-center small text-muted">
+                                <span th:each="r, iter : ${u.roles}">
+                                    <span th:text="${r.nombre}"></span><span th:if="${!iter.last}">, </span>
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group">
+                                    <!-- Cambiar plan -->
+                                    <form th:action="@{/admin/usuarios/{id}/plan(id=${u.id})}" method="post" class="d-inline">
+                                        <input type="hidden" name="plan" th:value="${u.plan.name() == 'BASICO'} ? 'PREMIUM' : 'BASICO'" />
+                                        <button type="submit" class="btn btn-sm btn-outline-warning" title="Cambiar plan">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                            <span th:text="${u.plan.name() == 'BASICO'} ? 'A Premium' : 'A Básico'"></span>
+                                        </button>
+                                    </form>
+                                    <!-- Activar / Desactivar -->
+                                    <form th:action="@{/admin/usuarios/{id}/estado(id=${u.id})}" method="post" class="d-inline">
+                                        <input type="hidden" name="activo" th:value="${!u.activo}" />
+                                        <button type="submit"
+                                                th:class="${u.activo} ? 'btn btn-sm btn-outline-danger' : 'btn btn-sm btn-outline-success'"
+                                                title="Activar/Desactivar">
+                                            <i th:class="${u.activo} ? 'bi bi-slash-circle' : 'bi bi-check-circle'"></i>
+                                            <span th:text="${u.activo} ? 'Desactivar' : 'Activar'"></span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(usuarios)}">
+                            <td colspan="7" class="text-center text-muted py-4">No hay usuarios registrados.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: creación de cuentas (Admin o Usuario) -->
+    <div class="modal fade" id="modalNuevaCuenta" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form th:action="@{/admin/usuarios/crear}" method="post" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-person-plus-fill"></i> Nueva cuenta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre completo</label>
+                        <input type="text" name="nombreCompleto" class="form-control" required maxlength="150">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Correo electrónico</label>
+                        <input type="email" name="email" class="form-control" required maxlength="150">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contraseña</label>
+                        <input type="password" name="password" class="form-control" required minlength="6">
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label">Tipo de cuenta</label>
+                        <select name="rol" class="form-select" required>
+                            <option value="USER" selected>Usuario (dueño de su propio almacén)</option>
+                            <option value="ADMIN">Administrador (control total)</option>
+                        </select>
+                    </div>
+                    <p class="small text-muted mb-0"><i class="bi bi-info-circle"></i> Toda cuenta nueva inicia en el plan Básico.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Crear cuenta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div th:replace="~{layout/fragments :: footer-app}"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/script.js}"></script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitudes de Plan | LogiStock</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body>
+
+    <div th:replace="~{layout/fragments :: nav-dashboard}"></div>
+
+    <div class="container my-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-envelope-paper-fill text-primary"></i> Solicitudes de Cambio de Plan</h2>
+            <span class="badge bg-dark fs-6"><i class="bi bi-hourglass-split"></i> Pendientes: <span th:text="${#lists.size(solicitudes)}">0</span></span>
+        </div>
+
+        <div th:if="${param.get('aprobada')} != null" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> Solicitud aprobada. El plan del usuario ya fue actualizado.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${param.get('rechazada')} != null" class="alert alert-secondary alert-dismissible fade show" role="alert">
+            <i class="bi bi-x-circle-fill"></i> Solicitud rechazada. El plan del usuario no fue modificado.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="ps-4">Usuario</th>
+                            <th class="text-center">Plan actual</th>
+                            <th class="text-center">Plan solicitado</th>
+                            <th class="text-center">Fecha</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="s : ${solicitudes}">
+                            <td class="ps-4">
+                                <div class="fw-bold" th:text="${s.usuario.nombreCompleto}"></div>
+                                <div class="text-muted small" th:text="${s.usuario.email}"></div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary" th:text="${s.planActual}"></span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-warning text-dark" th:text="${s.planSolicitado}"></span>
+                            </td>
+                            <td class="text-center text-muted small" th:text="${#temporals.format(s.fechaSolicitud, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td class="text-center">
+                                <div class="btn-group">
+                                    <form th:action="@{/admin/solicitudes/{id}/aprobar(id=${s.id})}" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-success" title="Aprobar">
+                                            <i class="bi bi-check-lg"></i> Aprobar
+                                        </button>
+                                    </form>
+                                    <form th:action="@{/admin/solicitudes/{id}/rechazar(id=${s.id})}" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Rechazar">
+                                            <i class="bi bi-x-lg"></i> Rechazar
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(solicitudes)}">
+                            <td colspan="5" class="text-center text-muted py-4">No hay solicitudes pendientes.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{layout/fragments :: footer-app}"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/script.js}"></script>
+</body>
+</html>
