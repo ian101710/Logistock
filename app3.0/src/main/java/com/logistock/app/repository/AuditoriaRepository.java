@@ -1,0 +1,12 @@
+package com.logistock.app.repository;
+
+import com.logistock.app.model.Auditoria;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface AuditoriaRepository extends JpaRepository<Auditoria, Long> {
+    List<Auditoria> findAllByOrderByFechaDesc();
+
+    // Aislamiento por usuario: un ROLE_USER solo ve su propia auditoría.
+    List<Auditoria> findByUsuarioIdOrderByFechaDesc(Long usuarioId);
+}

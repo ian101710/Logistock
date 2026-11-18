@@ -1,0 +1,54 @@
+package com.logistock.app.model;
+
+import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "auditoria")
+public class Auditoria {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private LocalDateTime fecha;
+
+    @Column(name = "usuario_email", nullable = false)
+    private String usuarioEmail;
+
+    @Column(nullable = false)
+    private String accion;
+
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String detalle;
+
+    // Relación @ManyToOne con el usuario que ejecutó la acción.
+    // Nullable: acciones del "Sistema" (sin usuario autenticado) no tienen dueño.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id", nullable = true)
+    @JsonIgnore
+    private Usuario usuario;
+
+    public Auditoria() {
+    }
+
+    // --- GETTERS Y SETTERS COMPLETO ---
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public LocalDateTime getFecha() { return fecha; }
+    public void setFecha(LocalDateTime fecha) { this.fecha = fecha; }
+
+    public String getUsuarioEmail() { return usuarioEmail; }
+    public void setUsuarioEmail(String usuarioEmail) { this.usuarioEmail = usuarioEmail; }
+
+    public String getAccion() { return accion; }
+    public void setAccion(String accion) { this.accion = accion; }
+
+    public String getDetalle() { return detalle; }
+    public void setDetalle(String detalle) { this.detalle = detalle; }
+
+    public Usuario getUsuario() { return usuario; }
+    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
+}

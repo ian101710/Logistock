@@ -1,0 +1,41 @@
+package com.logistock.app.model;
+
+import jakarta.persistence.*;
+import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+//  @Entity, @Table, @Id
+@Entity
+@Table(name = "categorias")
+public class Categoria {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String nombre;
+
+    // Dueño de la categoría. NULL = categoría "global" del catálogo,
+    // visible y utilizable por cualquier usuario (ver CategoriaRepository).
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id", nullable = true)
+    @JsonIgnore
+    private Usuario usuario;
+
+    // Relación @OneToMany (Una categoría, muchos productos)
+    @OneToMany(mappedBy = "categoria", cascade = CascadeType.ALL)
+    @JsonIgnore // Evita bucles infinitos al enviar JSON al frontend
+    private List<Producto> productos;
+
+    public Categoria() {}
+    public Categoria(Long id) { this.id = id; }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+    public Usuario getUsuario() { return usuario; }
+    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
+    public List<Producto> getProductos() { return productos; }
+    public void setProductos(List<Producto> productos) { this.productos = productos; }
+}
